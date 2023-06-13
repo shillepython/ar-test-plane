@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Babylon.js Plane Detection</title>
+  <style>
+    #renderCanvas {
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="renderCanvas"></canvas>
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+  <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+  <script>
+    // Создаем сцену и движок рендеринга
+    var canvas = document.getElementById("renderCanvas");
+    var engine = new BABYLON.Engine(canvas, true);
+
+    // Создаем сцену
+    var createScene = function () {
+      var scene = new BABYLON.Scene(engine);
+
+      // Создаем камеру
+      var camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1, -5), scene);
+      camera.setTarget(BABYLON.Vector3.Zero());
+
+      // Включаем отладочную панель для отображения плоскостей
+      scene.debugLayer.show();
+
+      // Включаем распознавание плоскостей
+      scene.createDefaultXRExperienceAsync({ floorMeshes: true }).then((xperience) => {
+        xperience.input.onControllerAddedObservable.add((controller) => {
+          // Обработчик события, срабатывающий при обнаружении плоскости
+          controller.onMotionControllerInitObservable.add((motionController) => {
+            motionController.onMeshLoadedObservable.add((mesh) => {
+              // Создаем объект для размещения на плоскости
+              var box = BABYLON.MeshBuilder.CreateBox("box", { size: 0.5 }, scene);
+              box.position.copyFrom(mesh.position);
+              box.setParent(mesh);
+            });
+          });
+        });
+      });
+
+      return scene;
+    };
+
+    // Создаем сцену
+    var scene = createScene();
+
+    // Запускаем основной цикл рендеринга
+    engine.runRenderLoop(function () {
+      scene.render();
+    });
+
+    // Обрабатываем изменение размеров окна
+    window.addEventListener("resize", function () {
+      engine.resize();
+    });
+  </script>
+</body>
+</html>
